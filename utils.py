@@ -15,6 +15,8 @@ def get_file_content(file_path):
     url = f"{base_api_url}/repos/{os.environ['GITHUB_REPOSITORY']}/contents/{file_path}"
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
+        print(url)
+        print(os.environ['GITHUB_REPOSITORY'])
         raise Exception(response.text)
     return base64.b64decode(response.json()['content']).decode('utf-8')
 
