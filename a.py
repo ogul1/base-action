@@ -52,4 +52,5 @@ python_version = utils.get_python_version(loaded_yaml)
 
 print(python_version)
 
-# utils.modify_file_content(yaml_file_content, python_version)
+f = utils.modify_file_content(yaml_file_content, python_version)
+print(f)

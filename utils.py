@@ -56,8 +56,8 @@ def add_set_up_python_and_dependencies(modified_file: str, indent: int, python_v
     return modified_file
 
 
-def add_push_results_to_another_repository(modified_file: str) -> str:
-    modified_file += "test\n"
+def add_push_results_to_another_repository(modified_file: str, indent: int) -> str:
+    modified_file += " " * indent + "add code to push results to another repository\n"
     return modified_file
 
 
@@ -70,6 +70,9 @@ def modify_file_content(yaml_file_content: str, python_version: str) -> str:
     initial_file = yaml_file_content.split("\n")
     total_lines = len(initial_file)
     steps_indent = -1
+    steps_dashes_indent = -1
+    step_started = False
+    step_ended = False
 
     for i, line in enumerate(initial_file):
         modified_file += line
@@ -81,17 +84,23 @@ def modify_file_content(yaml_file_content: str, python_version: str) -> str:
         line_indent = get_indent(line)
 
         if line_indent <= steps_indent and line.lstrip()[0] != '-':  # steps end
+            step_started = False
+            step_ended = True
             # add code to collect the logs
-            modified_file = add_push_results_to_another_repository(modified_file)
+            modified_file = add_push_results_to_another_repository(modified_file, steps_dashes_indent)
 
         if "steps" in line:  # steps start
+            step_started = True
+            step_ended = False
             steps_indent = line_indent
-            indent = 0
             for j in range(i + 1, total_lines):
                 if initial_file[j].strip() != "" and initial_file[j].lstrip()[0] != "#":
-                    indent = get_indent(initial_file[j])
+                    steps_dashes_indent = get_indent(initial_file[j])
                     break
-            modified_file = add_set_up_python_and_dependencies(modified_file, indent, python_version)
+            modified_file = add_set_up_python_and_dependencies(modified_file, steps_dashes_indent, python_version)
+
+    if step_started and not step_ended:
+        modified_file = add_push_results_to_another_repository(modified_file, steps_dashes_indent)
 
     print(modified_file)
 
