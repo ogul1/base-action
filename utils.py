@@ -56,21 +56,42 @@ def add_set_up_python_and_dependencies(modified_file: str, indent: int, python_v
     return modified_file
 
 
+def add_push_results_to_another_repository(modified_file: str) -> str:
+    modified_file += "test\n"
+    return modified_file
+
+
+def get_indent(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
 def modify_file_content(yaml_file_content: str, python_version: str) -> str:
     modified_file = ""
     initial_file = yaml_file_content.split("\n")
     total_lines = len(initial_file)
+    steps_indent = -1
 
     for i, line in enumerate(initial_file):
         modified_file += line
         modified_file += "\n"
-        if "steps" in line:
+
+        if line.strip() == "" or line.lstrip()[0] == "#":  # empty line or comment line
+            continue
+
+        line_indent = get_indent(line)
+
+        if "steps" in line:  # steps start
+            steps_indent = line_indent
             indent = 0
             for j in range(i + 1, total_lines):
                 if initial_file[j].strip() != "" and initial_file[j].lstrip()[0] != "#":
-                    indent = len(initial_file[j]) - len(initial_file[j].lstrip())
+                    indent = get_indent(initial_file[j])
                     break
             modified_file = add_set_up_python_and_dependencies(modified_file, indent, python_version)
+
+        if line_indent <= steps_indent and line.lstrip()[0] != '-':  # steps end
+            # add code to collect the logs
+            modified_file = add_push_results_to_another_repository(modified_file)
 
     print(modified_file)
 
