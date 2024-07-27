@@ -1,0 +1,25 @@
+name: 'OptCD tool'
+description: 'Demo tool for OptCD'
+
+inputs:
+  yaml-file:
+    description: 'YAML file to be modified'
+    required: true
+
+#outputs:
+#  unnecessary-folders:
+#    description:
+#    value:
+#  responsible-plugins:
+#    description:
+#    value:
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - run: python "${{ github.action_path }}"/main.py "${{ inputs.yaml-file }}"
+      shell: bash
