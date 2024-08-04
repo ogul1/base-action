@@ -9,10 +9,7 @@ def main():
     yaml_file_path = sys.argv[1]
     yaml_file_content = utils.get_file_content(yaml_file_path)
 
-    loaded_yaml = utils.load_yaml(yaml_file_content)
-    python_version = utils.get_python_version(loaded_yaml)
-
-    utils.modify_file_content(yaml_file_content, python_version)
+    utils.modify_file_content(yaml_file_content)
 
 
 if __name__ == '__main__':

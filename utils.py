@@ -1,10 +1,9 @@
 import os
 import requests
 import base64
-import ruamel.yaml
+import re
 
-yaml = ruamel.yaml.YAML()
-
+"""
 owner = os.environ['GITHUB_REPOSITORY'].split('/')[0]
 repo = os.environ['GITHUB_REPOSITORY'].split('/')[1]
 token: str = os.environ['GITHUB_TOKEN']
@@ -22,23 +21,7 @@ def get_file_content(yaml_file_path: str) -> str:
     if response.status_code != 200:
         raise Exception(response.text)
     return base64.b64decode(response.json()['content']).decode('utf-8')
-
-
-def load_yaml(yaml_file_content: str):
-    return yaml.load(yaml_file_content)
-
-
-def get_python_version(loaded_yaml) -> str:
-    python_version = "3.10"
-    for job_name in loaded_yaml["jobs"].keys():
-        if "steps" not in loaded_yaml["jobs"][job_name]:
-            continue
-        for step in loaded_yaml["jobs"][job_name]["steps"]:
-            if "uses" not in step or "actions/setup-python" not in step["uses"] or "with" not in step:
-                continue
-            if "python-version" in step["with"]:
-                python_version = step["with"]["python-version"]
-    return python_version
+"""
 
 
 def add_set_up_python_and_dependencies(modified_file: str, indent: int, python_version: str) -> str:
@@ -52,12 +35,12 @@ def add_set_up_python_and_dependencies(modified_file: str, indent: int, python_v
     modified_file += " " * (indent + 4) + "pip install numpy\n"
     modified_file += " " * indent + "- run: sudo apt update\n"
     modified_file += " " * indent + "- run: sudo apt install inotify-tools\n"
-    modified_file += " " * indent + f"- run: inotifywait -dmr /home/runner/work/{owner}/{repo}/ --format '%T;%w;%f;%e' --timefmt '%T' -o /home/runner/inotify-logs.csv\n"
+    # modified_file += " " * indent + f"- run: inotifywait -dmr /home/runner/work/{owner}/{repo}/ --format '%T;%w;%f;%e' --timefmt '%T' -o /home/runner/inotify-logs.csv\n"
     return modified_file
 
 
 def add_push_results_to_another_repository(modified_file: str, indent: int) -> str:
-    modified_file += " " * indent + "add code to push results to another repository\n"
+    modified_file += " " * indent + "- name: add code to push results to another repository\n"
     return modified_file
 
 
@@ -65,43 +48,114 @@ def get_indent(line: str) -> int:
     return len(line) - len(line.lstrip())
 
 
-def modify_file_content(yaml_file_content: str, python_version: str) -> str:
+def handle_if(modified_file: str, initial_file: list[str], current_line: int) -> (str, int):
+    line = initial_file[current_line]
+
+    dash_if_pattern = r"\s*-\s+if\s*:"  # matches - if:
+    dash_if_regex = re.compile(dash_if_pattern)
+
+    # if indent - dash indent - 1 == spaces after -
+
+    if dash_if_regex.match(line):  # " - if"
+        current_line += 1
+        dash_indent = get_indent(line)
+        if_indent = line.index("i")
+
+        while current_line < len(initial_file) and if_indent < get_indent(initial_file[current_line]):
+            # string in the multiline block if multiline, otherwise won't enter this loop
+            current_line += 1
+
+        first_to_be_added = True
+        while current_line < len(initial_file) and if_indent <= get_indent(initial_file[current_line]):
+            # other key value pairs in the object
+            if first_to_be_added:
+                modified_file += " " * dash_indent + "-" + " " * (if_indent - dash_indent - 1)
+                modified_file += initial_file[current_line].lstrip() + "\n"
+                current_line += 1
+                first_to_be_added = False
+                continue
+            modified_file += initial_file[current_line] + "\n"
+            current_line += 1
+
+        return modified_file, current_line
+
+    current_line += 1
+    if_indent = get_indent(line)
+    while current_line < len(initial_file) and if_indent < get_indent(initial_file[current_line]):
+        current_line += 1  # skip everything in if block for multilines
+    return modified_file, current_line
+
+
+def handle_on(modified_file: str, initial_file: list[str], current_line: int) -> (str, int):
+    on_indent = get_indent(initial_file[current_line])
+    modified_file += " " * on_indent + "on: [push]\n"  # we only need on: [push]
+    current_line += 1
+    while current_line < len(initial_file) and on_indent < get_indent(initial_file[current_line]):  # while in "on"
+        current_line += 1
+    return modified_file, current_line
+
+
+def handle_steps(modified_file: str, initial_file: list[str], current_line: int) -> (str, int, int, int, bool):
+    if current_line + 1 >= len(initial_file):
+        raise Exception("Invalid YAML file, steps field is null")
+
+    steps_indent = get_indent(initial_file[current_line])
+    steps_dashes_indent = get_indent(initial_file[current_line + 1])
+
+    modified_file += initial_file[current_line] + "\n"
+    modified_file = add_set_up_python_and_dependencies(modified_file, steps_dashes_indent, "3.10")
+    current_line += 1
+
+    return modified_file, current_line, steps_indent, steps_dashes_indent, True
+
+
+def modify_file_content(yaml_file_content: str) -> str:
     modified_file = ""
-    initial_file = yaml_file_content.split("\n")
-    total_lines = len(initial_file)
+
+    initial_file = yaml_file_content.split("\n")  # filter out empty lines and comment lines
+    initial_file = list(filter(lambda _line: len(_line.strip()) != 0 and _line.strip()[0] != "#", initial_file))
+
     steps_indent = -1
     steps_dashes_indent = -1
-    step_started = False
-    step_ended = False
+    in_step = False
+    current_line = 0
 
-    for i, line in enumerate(initial_file):
-        modified_file += line
-        modified_file += "\n"
+    if_pattern = r"\s*-\s+if\s*:|\s*if\s*:"  # match - if:  or  if:
+    if_regex = re.compile(if_pattern)
 
-        if line.strip() == "" or line.lstrip()[0] == "#":  # empty line or comment line
-            continue
+    on_pattern = r"\s*on\s*:"  # match on:
+    on_regex = re.compile(on_pattern)
 
+    steps_pattern = r"\s*steps\s*:"  # match steps:
+    steps_regex = re.compile(steps_pattern)
+
+    while current_line < len(initial_file):
+        line = initial_file[current_line]
         line_indent = get_indent(line)
 
-        if line_indent <= steps_indent and line.lstrip()[0] != '-':  # steps end
-            step_started = False
-            step_ended = True
-            # add code to collect the logs
+        if in_step and line_indent <= steps_indent and line.strip()[0] != "-":  # step block ends
+            in_step = False
             modified_file = add_push_results_to_another_repository(modified_file, steps_dashes_indent)
 
-        if "steps" in line:  # steps start
-            step_started = True
-            step_ended = False
-            steps_indent = line_indent
-            for j in range(i + 1, total_lines):
-                if initial_file[j].strip() != "" and initial_file[j].lstrip()[0] != "#":
-                    steps_dashes_indent = get_indent(initial_file[j])
-                    break
-            modified_file = add_set_up_python_and_dependencies(modified_file, steps_dashes_indent, python_version)
+        if if_regex.match(line):  # "if" block
+            modified_file, current_line = handle_if(modified_file, initial_file, current_line)
+            continue
 
-    if step_started and not step_ended:
+        if on_regex.match(line):  # "on" block
+            modified_file, current_line = handle_on(modified_file, initial_file, current_line)
+            continue
+
+        if steps_regex.match(line):  # "steps" - add prefix steps
+            modified_file, current_line, steps_indent, steps_dashes_indent, in_step = handle_steps(modified_file,
+                                                                                                   initial_file,
+                                                                                                   current_line)
+            continue
+
+        # by default, simply add the line
+        modified_file += initial_file[current_line] + "\n"
+        current_line += 1
+
+    if in_step:
         modified_file = add_push_results_to_another_repository(modified_file, steps_dashes_indent)
-
-    print(modified_file)
 
     return modified_file
