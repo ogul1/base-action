@@ -34,6 +34,7 @@ runs:
     
     - name: run ls
       run: ls "${{ github.action_path }}"
+      shell: bash
     
     - run: python "${{ github.action_path }}"/main.py "${{ inputs.yaml-file }}"
       shell: bash
