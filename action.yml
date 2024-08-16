@@ -40,6 +40,7 @@ runs:
 
     - name: run ls
       run: ls && ls modified
+      shell: bash
 
     - name: Test if file is accessible
       run: cat "${{ github.action_path }}"/modified/static.yml
