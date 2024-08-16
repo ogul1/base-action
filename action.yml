@@ -34,13 +34,14 @@ runs:
         pip install -r "${{ github.action_path }}"/requirements.txt
       shell: bash
     
-    - run: python "${{ github.action_path }}"/main.py "${{ inputs.yaml-file }}"
+    - name: Generate the modified YAML file
+      run: python "${{ github.action_path }}"/main.py "${{ inputs.yaml-file }}"
       shell: bash
       env:
         GITHUB_TOKEN: ${{ github.token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
 
-    - name: Push modified YAML file
+    - name: Push the modified YAML file
       shell: bash
       run: |
         git config --global user.name "ogul1"
@@ -49,7 +50,7 @@ runs:
         git commit -m "add modified workflow"
         git push
         
-    - name: Run modified YAML file
+    - name: Run the modified YAML file
       uses: actions/github-script@v7.0.1
       with:
         github-token: ${{ inputs.gh-pat-token }}
