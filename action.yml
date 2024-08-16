@@ -42,9 +42,14 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
 
-    - name: Test if file is accessible
-      run: cat modified/static.yml
+    - name: Push modified YAML file
       shell: bash
+      run: |
+        git config --global user.name "ogul1"
+        git config --global user.email "emirhan.ogul@metu.edu.tr"
+        git add modified/static.yml
+        git commit -m "add modified/static.yml"
+        git push
         
     - name: Run modified YAML file
       uses: actions/github-script@v7.0.1
