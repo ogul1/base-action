@@ -12,6 +12,8 @@ def main():
     modified_file = utils.modify_file_content(yaml_file_content)
     print(modified_file)
 
+    open("modified/static.yml", "w").write(modified_file)
+
 
 if __name__ == '__main__':
     main()
