@@ -5,6 +5,7 @@ inputs:
   yaml-file:
     description: 'YAML file to be modified'
     required: true
+  
 
 #outputs:
 #  unnecessary-folders:
@@ -13,8 +14,6 @@ inputs:
 #  responsible-plugins:
 #    description:
 #    value:
-
-permissions: write-all
 
 runs:
   using: 'composite'
@@ -36,7 +35,7 @@ runs:
     - name: GitHub Script
       uses: actions/github-script@v7.0.1
       with:
-        github-token: ${{ secrets.GH_PAT_TOKEN }}
+        github-token: ${{ github.token }}
         script: |
           github.rest.actions.createWorkflowDispatch({
             owner: "ogul1",
