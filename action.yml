@@ -34,10 +34,6 @@ runs:
         pip install -r "${{ github.action_path }}"/requirements.txt
       shell: bash
     
-    - name: run ls
-      run: ls "${{ github.action_path }}"
-      shell: bash
-    
     - run: python "${{ github.action_path }}"/main.py "${{ inputs.yaml-file }}"
       shell: bash
       env:
@@ -49,8 +45,8 @@ runs:
       run: |
         git config --global user.name "ogul1"
         git config --global user.email "emirhan.ogul@metu.edu.tr"
-        git add modified/static.yml
-        git commit -m "add modified/static.yml"
+        git add .github/workflows/modified-workflow.yml
+        git commit -m "add modified workflow"
         git push
         
     - name: Run modified YAML file
@@ -61,6 +57,6 @@ runs:
           github.rest.actions.createWorkflowDispatch({
             owner: "ogul1",
             repo: "workflow-that-uses-base-action",
-            workflow_id: "dynamic-workflow.yml",
+            workflow_id: "modified-workflow.yml",
             ref: "main"
           })
