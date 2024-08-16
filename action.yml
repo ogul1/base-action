@@ -14,6 +14,8 @@ inputs:
 #    description:
 #    value:
 
+permissions: write-all
+
 runs:
   using: 'composite'
   steps:
