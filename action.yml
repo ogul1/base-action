@@ -39,7 +39,7 @@ runs:
         GITHUB_REPOSITORY: ${{ github.repository }}
 
     - name: Test if file is accessible
-      run: cat modified/static.yml
+      run: cat "${{ github.action_path }}"/modified/static.yml
       shell: bash
         
     - name: Run modified YAML file
