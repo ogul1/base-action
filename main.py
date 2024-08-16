@@ -1,5 +1,6 @@
 import sys
 import utils
+import os
 
 
 def main():
@@ -12,6 +13,7 @@ def main():
     modified_file = utils.modify_file_content(yaml_file_content)
     print(modified_file)
 
+    os.mkdir("modified", 0o755)
     open("modified/static.yml", "w+").write(modified_file)
 
 
