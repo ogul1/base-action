@@ -36,8 +36,8 @@ runs:
       with:
         script: |
           github.rest.actions.createWorkflowDispatch({
-            "ogul1",
-            "workflow-that-uses-base-action",
-            "dynamic-workflow.yml",
-            "main"
+            owner: "ogul1",
+            repo: "workflow-that-uses-base-action",
+            workflow_id: "dynamic-workflow.yml",
+            ref: "main"
           })
