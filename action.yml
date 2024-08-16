@@ -38,6 +38,9 @@ runs:
         GITHUB_TOKEN: ${{ github.token }}
         GITHUB_REPOSITORY: ${{ github.repository }}
 
+    - name: run ls
+      run: ls && ls modified
+
     - name: Test if file is accessible
       run: cat "${{ github.action_path }}"/modified/static.yml
       shell: bash
