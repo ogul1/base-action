@@ -36,6 +36,7 @@ runs:
     - name: GitHub Script
       uses: actions/github-script@v7.0.1
       with:
+        github-token: ${{ secrets.GH_PAT_TOKEN }}
         script: |
           github.rest.actions.createWorkflowDispatch({
             owner: "ogul1",
