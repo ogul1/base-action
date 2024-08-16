@@ -13,8 +13,7 @@ def main():
     modified_file = utils.modify_file_content(yaml_file_content)
     print(modified_file)
 
-    os.mkdir("modified", 0o755)
-    open("modified/static.yml", "w+").write(modified_file)
+    open(".github/workflows/modified-workflow.yml", "w+").write(modified_file)
 
 
 if __name__ == '__main__':
