@@ -44,6 +44,8 @@ runs:
     - name: Push the modified YAML file
       shell: bash
       run: |
+        git config --global user.email "you@example.com"
+        git config --global user.name "Your Name"
         git add .github/workflows/modified-workflow.yml
         git commit -m "add modified workflow"
         git push
