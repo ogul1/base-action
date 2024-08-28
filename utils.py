@@ -39,7 +39,7 @@ def add_set_up_python_and_dependencies(modified_file: str, indent: int, python_v
 
 def add_push_results_to_another_repository(modified_file: str, indent: int) -> str:
     modified_file += " " * indent + "- name: add code to push results to another repository\n"
-    modified_file += " " * (indent + 2) + "run: echo hello\n"
+    modified_file += " " * (indent + 2) + "run: cat /home/runner/inotify-logs.csv\n"
     return modified_file
 
 
