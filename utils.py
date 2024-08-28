@@ -39,6 +39,7 @@ def add_set_up_python_and_dependencies(modified_file: str, indent: int, python_v
 
 def add_push_results_to_another_repository(modified_file: str, indent: int) -> str:
     modified_file += " " * indent + "- name: add code to push results to another repository\n"
+    modified_file += " " * (indent + 2) + "run: echo hello\n"
     return modified_file
 
 
@@ -86,7 +87,7 @@ def handle_if(modified_file: str, initial_file: list[str], current_line: int) ->
 
 def handle_on(modified_file: str, initial_file: list[str], current_line: int) -> (str, int):
     on_indent = get_indent(initial_file[current_line])
-    modified_file += " " * on_indent + "on: [push]\n"  # we only need on: [push]
+    modified_file += " " * on_indent + "on: [push, workflow_dispatch]\n"
     current_line += 1
     while current_line < len(initial_file) and on_indent < get_indent(initial_file[current_line]):  # while in "on"
         current_line += 1
