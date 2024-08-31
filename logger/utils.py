@@ -3,8 +3,8 @@ import requests
 import base64
 import re
 
-owner = os.environ['GITHUB_REPOSITORY'].split('/')[0]
-repo = os.environ['GITHUB_REPOSITORY'].split('/')[1]
+owner = os.environ['GITHUB_REPOSITORY'].split(os.sep)[0]
+repo = os.environ['GITHUB_REPOSITORY'].split(os.sep)[1]
 token: str = os.environ['GITHUB_TOKEN']
 base_api_url: str = "https://api.github.com"
 headers: dict = {
